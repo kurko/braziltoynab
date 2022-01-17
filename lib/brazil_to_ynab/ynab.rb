@@ -17,19 +17,37 @@ module BrazilToYnab
     def sync(xls_file:)
       @error_messages = {}
 
-      BrazilToYnab::PortoSeguro::Xls.new(file: xls_file).get_transactions.each do |transaction|
-        begin
-          if create_transaction(transaction)
-            print "."
-          end
-        rescue ::YNAB::ApiError => e
-          # If a transaction already exists, nevermind.
-          unless e.name == 'conflict'
-            raise e
-          end
-        end
+      payload =
+        BrazilToYnab::PortoSeguro::Xls
+        .new(file: xls_file)
+        .get_transactions
+        .map { |transaction| payload_for_transaction(transaction) }
+        .compact
+
+      return if payload.none?
+
+      response = client
+        .transactions
+        .create_transaction(budget_id, transactions: payload)
+
+      # For the duplicates, let's update them but,
+      #
+      # - without changing their payee because they can be edited in
+      #   YNAB
+      # - without changing their description for the same reason
+      duplicate_ids = response.data.duplicate_import_ids
+
+      if duplicate_ids.any?
+        new_payload =
+          payload
+          .select { |txn| duplicate_ids.include?(txn[:import_id]) }
+          .map { |txn| txn.except(:payee, :memo) }
+
+        client
+          .transactions
+          .update_transactions(budget_id, transactions: new_payload)
       end
-      puts ""
+
     rescue ::YNAB::ApiError => e
       puts "YNAB ERROR: id=#{e.id}; name=#{e.name}; detail: #{e.detail}"
     ensure
@@ -54,25 +72,21 @@ module BrazilToYnab
         raise("You have not defined #{constant}")
     end
 
-    def create_transaction(transaction)
+    def payload_for_transaction(transaction)
       if account_for_card(transaction.card_number).nil?
         @error_messages["No account configuration for card #{transaction.card_number}"] = nil
         return
       end
 
       transaction_date = transaction.transaction_date.strftime("%Y-%m-%d")
-      pp "transaction_date: #{transaction_date.inspect}"
-
-      input = {
+      {
         account_id: account_for_card(transaction.card_number),
         amount: BrazilToYnab::Ynab::Milliunit.new(transaction.amount).format,
         date: transaction_date,
         payee_name: transaction.payee,
         memo: transaction.memo,
-        import_id: transaction.id.to_s[0..35],
+        import_id: transaction.id.to_s[0..34],
       }
-
-      client.transactions.create_transaction(budget_id, transaction: input)
     end
   end
 end

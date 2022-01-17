@@ -16,7 +16,19 @@ module BrazilToYnab
     end
 
     def id
-      "#{@date}#{@card_number}#{amount}#{memo}".tr('^A-Za-z0-9', '')
+      installment_id = if installments?
+                         installments_string
+                       else
+                         "01/01"
+                       end
+
+      [
+        @card_number.tr('-', ''),
+        transaction_date.to_s.tr('-', ''),
+        amount,
+        installment_id,
+        memo.tr('-', ''),
+      ].join.tr('^A-Za-z0-9-', '')
     end
 
     def transaction_date
@@ -30,9 +42,9 @@ module BrazilToYnab
     end
 
     def amount
-      if @credit
-        @credit
-      elsif @debit
+      if @credit.to_i != 0
+        @credit.to_f.abs.to_s
+      elsif @debit.to_i != 0
         "-#{@debit}"
       else
         raise Error, "No credit nor debit found"

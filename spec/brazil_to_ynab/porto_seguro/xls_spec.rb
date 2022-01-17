@@ -14,7 +14,7 @@ RSpec.describe BrazilToYnab::PortoSeguro::Xls do
     expect(subject[0].first_installment_date).to eq Date.parse('2021-10-14')
     expect(subject[0].account_name).to eq 'PERSON 1'
     expect(subject[0].card_number).to eq '3113'
-    expect(subject[0].id).to eq '202110143113110818LOJAX0405'
+    expect(subject[0].id).to eq '311320220114-1108180405LOJAX0405'
 
     expect(subject[1].amount).to eq '1000.0'
     expect(subject[1].payee).to eq 'PIX'
@@ -22,7 +22,7 @@ RSpec.describe BrazilToYnab::PortoSeguro::Xls do
     expect(subject[1].first_installment_date).to eq Date.parse('2022-01-13')
     expect(subject[1].account_name).to eq 'PERSON 1'
     expect(subject[1].card_number).to eq '3113'
-    expect(subject[1].id).to eq '20220113311310000PIX'
+    expect(subject[1].id).to eq '311320220113100000101PIX'
 
     expect(subject[2].amount).to eq '-300.0'
     expect(subject[2].payee).to eq 'RESTAURANTE BR'
@@ -37,7 +37,7 @@ RSpec.describe BrazilToYnab::PortoSeguro::Xls do
     expect(subject[3].first_installment_date).to eq Date.parse('2021-05-11')
     expect(subject[3].account_name).to eq 'PERSON 2'
     expect(subject[3].card_number).to eq '6230'
-    expect(subject[3].id).to eq '2021051162309299AUTHENTICFEET0910'
+    expect(subject[3].id).to eq '623020220111-92990910AUTHENTICFEET0910'
 
     expect(subject[14].amount).to eq '-205.59'
     expect(subject[14].payee).to eq 'PARC=108AIRBNB PAGA'
