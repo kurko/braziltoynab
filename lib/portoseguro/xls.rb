@@ -18,7 +18,6 @@ module Portoseguro
     TOTAL_CELL_VALUE = "TOTAL".freeze
     NATIONAL_SHEET = "nacional"
 
-
     def initialize(file:)
       @file = file
     end

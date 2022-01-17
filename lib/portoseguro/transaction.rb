@@ -4,7 +4,7 @@ module Portoseguro
   class Transaction
     class Error < StandardError; end
 
-    attr_reader :payee, :account_name, :card_number, :date
+    attr_reader :account_name, :card_number, :date
 
     def initialize(credit:, debit:, payee:, date:, account_name:, card_number:)
       @credit = credit&.to_s&.strip
@@ -16,7 +16,7 @@ module Portoseguro
     end
 
     def id
-      "#{@date}#{@card_number}#{amount}#{payee}".tr('^A-Za-z0-9', '')
+      "#{@date}#{@card_number}#{amount}#{memo}".tr('^A-Za-z0-9', '')
     end
 
     def amount
@@ -27,6 +27,17 @@ module Portoseguro
       else
         raise Error, "No credit nor debit found"
       end
+    end
+
+    def payee
+      @payee
+        .gsub(/[0-9]{1,2}\/[0-9]{1,2}/, '')
+        .gsub(/\s\s/, ' ')
+        .strip
+    end
+
+    def memo
+      @payee
     end
   end
 end

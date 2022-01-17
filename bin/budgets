@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+$LOAD_PATH << File.absolute_path('.', "lib")
+require "bundler/setup"
+require "portoseguro"
+
+budgets = Portoseguro::Ynab.new.list_budgets
+
+if budgets.size == 0
+  puts "No budgets found in this account."
+  return
+end
+
+puts "Which budget should be used?"
+puts
+
+budgets.each do |budget|
+  puts "Budget ID & Name: #{budget.id} - #{budget.name}"
+end
+puts
+
+puts "Define an ENV var with the budget you'll be using:"
+puts
+puts "\t\texport PORTOSEGURO_BUDGET=\"abc\""
+puts

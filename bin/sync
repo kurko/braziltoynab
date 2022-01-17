@@ -1,6 +1,10 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+$LOAD_PATH << File.absolute_path('.', "lib")
 require "bundler/setup"
-require "portoseguro/ynab"
+require "portoseguro"
 
+puts "Syncing..."
+budgets = Portoseguro::Ynab.new.sync(xls_file: $ARGV[0])
+puts "done."
