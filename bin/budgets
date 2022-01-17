@@ -3,9 +3,9 @@
 
 $LOAD_PATH << File.absolute_path('.', "lib")
 require "bundler/setup"
-require "portoseguro"
+require "brazil_to_ynab"
 
-budgets = Portoseguro::Ynab.new.list_budgets
+budgets = BrazilToYnab::Ynab.new.list_budgets
 
 if budgets.size == 0
   puts "No budgets found in this account."

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Portoseguro
+module BrazilToYnab
   class Transaction
     class Error < StandardError; end
 

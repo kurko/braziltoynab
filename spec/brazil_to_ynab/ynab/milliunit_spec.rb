@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Portoseguro::Ynab::Milliunit do
+RSpec.describe BrazilToYnab::Ynab::Milliunit do
   subject do
   end
 

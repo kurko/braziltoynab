@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-RSpec.describe Portoseguro::Ynab do
+RSpec.describe BrazilToYnab::Ynab do
   subject do
-    described_class.new(file: 'Fature20220225.xls')
+    described_class.new
   end
 
   it "loads transactions from XLS file" do

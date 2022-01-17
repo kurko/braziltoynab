@@ -1,35 +1,54 @@
-# Portoseguro::Ynab
+# BrazilToYnab
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/portoseguro/ynab`. To experiment with that code, run `bin/console` for an interactive prompt.
+Este é um conjunto de scripts para ler dados de transações e importar no YNAB
+(já que estamos em 2021 e ainda não temos openbanking no Brasil). YNAB é o app
+[YouNeedABudget](youneedabudget.com).
 
-TODO: Delete this and the text above, and describe your gem
+| Plataformas suportadas                | ID          |
+|---------------------------------------|-------------|
+| - Cartões Porto Seguro: arquivos .xls | PORTOSEGURO |
 
-## Installation
+## Uso
 
-Add this line to your application's Gemfile:
+1. Você precisa de Ruby na sua máquina local (Unix/MacOS).
+1. Download: faça um `git clone` do repositório.
+1. Configuração do YNAB: você precisa configurar o `API_TOKEN` do YNAB na sua
+   máquina. Define a seguinte variável de ambiente:
 
-```ruby
-gem 'portoseguro-ynab'
-```
+   ```
+   YNAB_ACCESS_TOKEN="escreva-aqui-o-seu-token-do-ynab"
+   ```
 
-And then execute:
+   Você gera esse token na configurações de conta do seu YNAB.
 
-    $ bundle install
+1. Configuração de contas: agora você precisa criar as variáveis de ambiente que vão
+   relacionar dados exportados do seu banco com as contas do YNAB.
 
-Or install it yourself as:
+   A lógica segue o formato:
 
-    $ gem install portoseguro-ynab
+   ````
+   export BRAZILTOYNAB_${ID_DA_PLATAFORM}_BUDGET="id-do-budget"
+   export BRAZILTOYNAB_${ID_DA_PLATAFORM}_${ULTIMOS_4_DIGITOS_DO_CARTAO}="id-da-conta"
+   ```
 
-## Usage
+   Por exemplo, se você está usando `Porto Seguro` (ver ID na tabela acima) e o
+   seu arquivo XLS exportado do site portoseguro.com.br (portal do cliente) tem
+   os cartões com final `1234` e `5678` (eles aparecem como cabeçalho no
+   arquivo), então configure as variáveis da seguinte forma:
 
-TODO: Write usage instructions here
+   ````
+   export BRAZILTOYNAB_PORTOSEGURO_BUDGET="id-do-budget"
+   export BRAZILTOYNAB_PORTOSEGURO_1234="id-da-conta-no-ynab-pro-cartao-1234"
+   export BRAZILTOYNAB_PORTOSEGURO_5678="id-da-conta-no-ynab-pro-cartao-5678"
+   ```
 
-## Development
+1. Executando: para sincronizar o XLS com YNAB, rode `bin/sync $NOME_DO_ARQUIVO`.
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+    Por exemplo, no Porto Seguro é gerado um arquivo com a data da próxima
+    fatura e portanto você roda o script da seguinte forma:
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+    ```
+    bin/sync Fatura20220220.xls
+    ```
 
-## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/kurko/portoseguro-ynab.

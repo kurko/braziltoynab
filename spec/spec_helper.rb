@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "portoseguro"
+require "brazil_to_ynab"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

@@ -2,7 +2,7 @@
 
 require 'ynab'
 
-module Portoseguro
+module BrazilToYnab
   class Ynab
     def list_budgets
       budget_response = client.budgets.get_budgets
@@ -15,23 +15,27 @@ module Portoseguro
     end
 
     def sync(xls_file:)
-      Portoseguro::Xls.new(file: xls_file).get_transactions.each do |transaction|
+      BrazilToYnab::PortoSeguro::Xls.new(file: xls_file).get_transactions.each do |transaction|
         begin
-          create_transaction(transaction)
-        rescue YNAB::ApiError => e
+          if create_transaction(transaction)
+            print "."
+          end
+        rescue ::YNAB::ApiError => e
+          # If a transaction already exists, nevermind.
           unless e.name == 'conflict'
             raise e
           end
         end
       end
-    rescue YNAB::ApiError => e
-      puts "ERROR: id=#{e.id}; name=#{e.name}; detail: #{e.detail}"
+      puts ""
+    rescue ::YNAB::ApiError => e
+      puts "YNAB ERROR: id=#{e.id}; name=#{e.name}; detail: #{e.detail}"
     end
 
     private
 
     def client
-      @client ||= YNAB::API.new(ENV['YNAB_ACCESS_TOKEN'])
+      @client ||= ::YNAB::API.new(ENV['YNAB_ACCESS_TOKEN'])
     end
 
     def account_for_card(card_number)
@@ -45,19 +49,20 @@ module Portoseguro
     end
 
     def create_transaction(transaction)
-      return if account_for_card(transaction.card_number).nil?
+      if account_for_card(transaction.card_number).nil?
+        puts "No account configuration for card #{transaction.card_number}"
+        return
+      end
 
       input = {
         account_id: account_for_card(transaction.card_number),
-        amount: Portoseguro::Ynab::Milliunit.new(transaction.amount).format,
+        amount: BrazilToYnab::Ynab::Milliunit.new(transaction.amount).format,
         date: transaction.date,
         payee_name: transaction.payee,
         memo: transaction.memo,
         import_id: transaction.id.to_s[0..35],
       }
 
-      puts input
-      puts budget_id
       client.transactions.create_transaction(budget_id, transaction: input)
     end
   end

@@ -3,8 +3,8 @@
 
 $LOAD_PATH << File.absolute_path('.', "lib")
 require "bundler/setup"
-require "portoseguro"
+require "brazil_to_ynab"
 
 puts "Syncing..."
-budgets = Portoseguro::Ynab.new.sync(xls_file: $ARGV[0])
+budgets = BrazilToYnab::Ynab.new.sync(xls_file: $ARGV[0])
 puts "done."

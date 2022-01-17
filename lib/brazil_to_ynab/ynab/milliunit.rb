@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Portoseguro
+module BrazilToYnab
   class Ynab
     class Milliunit
       def initialize(amount)

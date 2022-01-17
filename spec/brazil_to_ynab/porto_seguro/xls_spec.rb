@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Portoseguro::Xls do
+RSpec.describe BrazilToYnab::PortoSeguro::Xls do
   subject do
     described_class.new(file: 'Fature20220225.xls').get_transactions
   end

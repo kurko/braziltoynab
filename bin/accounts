@@ -3,12 +3,12 @@
 
 $LOAD_PATH << File.absolute_path('.', "lib")
 require "bundler/setup"
-require "portoseguro"
+require "brazil_to_ynab"
 
 budget_id = $ARGV[0]
 puts "Listing accounts for budget #{budget_id}..."
 puts
-accounts = Portoseguro::Ynab.new.list_accounts(budget_id)
+accounts = BrazilToYnab::Ynab.new.list_accounts(budget_id)
 
 accounts.each do |item|
   puts "Account Name & ID: #{item.name} #{item.id}"
