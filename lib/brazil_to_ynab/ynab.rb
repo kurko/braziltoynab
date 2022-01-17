@@ -15,6 +15,8 @@ module BrazilToYnab
     end
 
     def sync(xls_file:)
+      @error_messages = {}
+
       BrazilToYnab::PortoSeguro::Xls.new(file: xls_file).get_transactions.each do |transaction|
         begin
           if create_transaction(transaction)
@@ -30,6 +32,10 @@ module BrazilToYnab
       puts ""
     rescue ::YNAB::ApiError => e
       puts "YNAB ERROR: id=#{e.id}; name=#{e.name}; detail: #{e.detail}"
+    ensure
+      @error_messages.each do |key, value|
+        puts key
+      end
     end
 
     private
@@ -50,7 +56,7 @@ module BrazilToYnab
 
     def create_transaction(transaction)
       if account_for_card(transaction.card_number).nil?
-        puts "No account configuration for card #{transaction.card_number}"
+        @error_messages["No account configuration for card #{transaction.card_number}"] = nil
         return
       end
 
