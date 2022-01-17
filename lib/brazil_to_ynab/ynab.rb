@@ -60,10 +60,13 @@ module BrazilToYnab
         return
       end
 
+      transaction_date = transaction.transaction_date.strftime("%Y-%m-%d")
+      pp "transaction_date: #{transaction_date.inspect}"
+
       input = {
         account_id: account_for_card(transaction.card_number),
         amount: BrazilToYnab::Ynab::Milliunit.new(transaction.amount).format,
-        date: transaction.date,
+        date: transaction_date,
         payee_name: transaction.payee,
         memo: transaction.memo,
         import_id: transaction.id.to_s[0..35],

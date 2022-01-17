@@ -42,7 +42,7 @@ module BrazilToYnab
             transactions << BrazilToYnab::Transaction.new(
               card_number: current_card,
               account_name: current_card_name,
-              date: transaction_date(cell(row, DATE_COL)),
+              date: first_installment_date(cell(row, DATE_COL)),
               payee: cell(row, DESCRIPTION_COL),
               credit: cell(row, CREDIT_COL),
               debit: cell(row, DEBIT_COL),
@@ -75,7 +75,11 @@ module BrazilToYnab
           )
       end
 
-      def transaction_date(day_month)
+      # Porto Seguro shows the date the transaction was created.
+      # If you bought in january and now you're on the 5th
+      # installment, this date continues being january, but the
+      # description shows `05/10` (5th installment out of 10).
+      def first_installment_date(day_month)
         file_match = @file.match('([0-9]{4})([0-9]{2})')
         file_year, file_month = file_match[1], file_match[2]
 
@@ -86,7 +90,7 @@ module BrazilToYnab
           file_year = (file_year.to_i - 1).to_s
         end
 
-        [file_year, transaction_month, transaction_day].join('-')
+        Date.new(file_year.to_i, transaction_month.to_i, transaction_day.to_i)
       end
     end
   end
