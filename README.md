@@ -26,7 +26,7 @@ Este é um conjunto de scripts para ler dados de transações e importar no YNAB
 
    A lógica segue o formato:
 
-   ````
+   ```
    export BRAZILTOYNAB_${ID_DA_PLATAFORM}_BUDGET="id-do-budget"
    export BRAZILTOYNAB_${ID_DA_PLATAFORM}_${ULTIMOS_4_DIGITOS_DO_CARTAO}="id-da-conta"
    ```
@@ -36,7 +36,7 @@ Este é um conjunto de scripts para ler dados de transações e importar no YNAB
    os cartões com final `1234` e `5678` (eles aparecem como cabeçalho no
    arquivo), então configure as variáveis da seguinte forma:
 
-   ````
+   ```
    export BRAZILTOYNAB_PORTOSEGURO_BUDGET="id-do-budget"
    export BRAZILTOYNAB_PORTOSEGURO_1234="id-da-conta-no-ynab-pro-cartao-1234"
    export BRAZILTOYNAB_PORTOSEGURO_5678="id-da-conta-no-ynab-pro-cartao-5678"

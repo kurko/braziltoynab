@@ -22,5 +22,5 @@ puts
 
 puts "Define an ENV var with the budget you'll be using:"
 puts
-puts "\t\texport PORTOSEGURO_BUDGET=\"abc\""
+puts "\t\texport #{BrazilToYnab::Ynab::BUDGET_ENV_VAR}=\"abc\""
 puts

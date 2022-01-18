@@ -4,6 +4,12 @@ require 'ynab'
 
 module BrazilToYnab
   class Ynab
+    # This is called PORTOSEGURO but the source could be other banks.
+    # Given we only support one for now, I'll keep it as is. The #sync
+    # method will also need to load these vars conditionally.
+    BUDGET_ENV_VAR = "BRAZILTOYNAB_PORTOSEGURO_BUDGET".freeze
+    CARD_ACCOUNT_ENV_VAR = "BRAZILTOYNAB_PORTOSEGURO".freeze
+
     def list_budgets
       budget_response = client.budgets.get_budgets
       budgets = budget_response.data.budgets
@@ -63,24 +69,26 @@ module BrazilToYnab
     end
 
     def account_for_card(card_number)
-      ENV["PORTOSEGURO_YNAB_#{card_number}"]
+      ENV["#{CARD_ACCOUNT_ENV_VAR}_#{card_number}"]
     end
 
     def budget_id
-      constant = 'PORTOSEGURO_YNAB_BUDGET'
-      ENV[constant] ||
-        raise("You have not defined #{constant}")
+      ENV[BrazilToYnab::Ynab::BUDGET_ENV_VAR] ||
+        raise("You have not defined #{BrazilToYnab::Ynab::BUDGET_ENV_VAR}")
     end
 
     def payload_for_transaction(transaction)
-      if account_for_card(transaction.card_number).nil?
-        @error_messages["No account configuration for card #{transaction.card_number}"] = nil
+      card_number = transaction.card_number
+
+      if account_for_card(card_number).nil?
+        message = "No account configuration for card #{card_number}. Define #{CARD_ACCOUNT_ENV_VAR}_#{card_number}"
+        @error_messages[message] = nil
         return
       end
 
       transaction_date = transaction.transaction_date.strftime("%Y-%m-%d")
       {
-        account_id: account_for_card(transaction.card_number),
+        account_id: account_for_card(card_number),
         amount: BrazilToYnab::Ynab::Milliunit.new(transaction.amount).format,
         date: transaction_date,
         payee_name: transaction.payee,
