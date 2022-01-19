@@ -28,7 +28,7 @@ Este é um conjunto de scripts para ler dados de transações e importar no YNAB
 
    ```
    export BRAZILTOYNAB_${ID_DA_PLATAFORM}_BUDGET="id-do-budget"
-   export BRAZILTOYNAB_${ID_DA_PLATAFORM}_${ULTIMOS_4_DIGITOS_DO_CARTAO}="id-da-conta"
+   export BRAZILTOYNAB_${ID_DA_PLATAFORM}_${ULTIMOS_4_DIGITOS_DO_CARTAO}_ACCOUNT_ID="id-da-conta"
    ```
 
    Por exemplo, se você está usando `Porto Seguro` (ver ID na tabela acima) e o
@@ -38,8 +38,8 @@ Este é um conjunto de scripts para ler dados de transações e importar no YNAB
 
    ```
    export BRAZILTOYNAB_PORTOSEGURO_BUDGET="id-do-budget"
-   export BRAZILTOYNAB_PORTOSEGURO_1234="id-da-conta-no-ynab-pro-cartao-1234"
-   export BRAZILTOYNAB_PORTOSEGURO_5678="id-da-conta-no-ynab-pro-cartao-5678"
+   export BRAZILTOYNAB_PORTOSEGURO_1234_ACCOUNT_ID="id-da-conta-no-ynab-pro-cartao-1234"
+   export BRAZILTOYNAB_PORTOSEGURO_5678_ACCOUNT_ID="id-da-conta-no-ynab-pro-cartao-5678"
    ```
 
 1. Executando: para sincronizar o XLS com YNAB, rode `bin/sync $NOME_DO_ARQUIVO`.
