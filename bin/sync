@@ -6,5 +6,20 @@ require "bundler/setup"
 require "brazil_to_ynab"
 
 puts "Syncing..."
-budgets = BrazilToYnab::Ynab.new.sync(xls_file: $ARGV[0])
+
+options = {
+  'override-memo': {
+    default: false,
+  }
+}
+
+selected_options = options.map do |option_name, properties|
+  value = $ARGV.include?("--#{option_name}")
+  [option_name.to_s, value]
+end.to_h
+
+budgets =
+  BrazilToYnab::Ynab
+  .new(options: selected_options)
+  .sync(xls_file: $ARGV[0])
 puts "done."

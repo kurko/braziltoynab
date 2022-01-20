@@ -6,7 +6,6 @@ RSpec.describe BrazilToYnab::PortoSeguro::Xls do
   end
 
   it "loads transactions from XLS file" do
-
     expect(subject[0].amount).to eq '-1108.18'
     expect(subject[0].payee).to eq 'LOJA X'
     expect(subject[0].memo).to eq 'LOJA X 04/05'

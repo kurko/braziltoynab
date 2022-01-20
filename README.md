@@ -4,9 +4,9 @@ Este é um conjunto de scripts para ler dados de transações e importar no YNAB
 (já que estamos em 2021 e ainda não temos openbanking no Brasil). YNAB é o app
 [YouNeedABudget](youneedabudget.com).
 
-| Plataformas suportadas                | ID          |
-|---------------------------------------|-------------|
-| - Cartões Porto Seguro: arquivos .xls | PORTOSEGURO |
+| Plataformas suportadas                | ID de plataforma |
+|---------------------------------------|------------------|
+| - Cartões Porto Seguro: arquivos .xls | PORTOSEGURO      |
 
 ## Uso
 
@@ -27,8 +27,8 @@ Este é um conjunto de scripts para ler dados de transações e importar no YNAB
    A lógica segue o formato:
 
    ```
-   export BRAZILTOYNAB_${ID_DA_PLATAFORM}_BUDGET="id-do-budget"
-   export BRAZILTOYNAB_${ID_DA_PLATAFORM}_${ULTIMOS_4_DIGITOS_DO_CARTAO}_ACCOUNT_ID="id-da-conta"
+   export BRAZILTOYNAB_${ID_DA_PLATAFORMA}_BUDGET="id-do-budget"
+   export BRAZILTOYNAB_${ID_DA_PLATAFORMA}_${ULTIMOS_4_DIGITOS_DO_CARTAO}_ACCOUNT_ID="id-da-conta"
    ```
 
    Por exemplo, se você está usando `Porto Seguro` (ver ID na tabela acima) e o
@@ -42,6 +42,18 @@ Este é um conjunto de scripts para ler dados de transações e importar no YNAB
    export BRAZILTOYNAB_PORTOSEGURO_5678_ACCOUNT_ID="id-da-conta-no-ynab-pro-cartao-5678"
    ```
 
+   Outras variáveis de ambiente:
+
+   - `BRAZILTOYNAB_${PLATAFORMA}_${cartao}_MEMO_PREFIX="Um prefixo: "`: se você
+   quer que todas as transações desse cartão tenham um determinado prefixo no
+   campo Memo no YNAB.
+
+   Eu acho útil colocar os cartões todos na mesma conta do YNAB, e diferenciar
+   eles por um prefixo no campo memo. Assim um único pagamento de fatura (uma transação)
+   cobre os cartão adicionais. Se você colocar todos na mesma conta, vai precisa
+   diferenciá-los de alguma forma. Se você prefere colocar cada cartão em uma
+   conta separada, talvez não precise dessa configuração.
+
 1. Executando: para sincronizar o XLS com YNAB, rode `bin/sync $NOME_DO_ARQUIVO`.
 
     Por exemplo, no Porto Seguro é gerado um arquivo com a data da próxima
@@ -50,5 +62,14 @@ Este é um conjunto de scripts para ler dados de transações e importar no YNAB
     ```
     bin/sync Fatura20220220.xls
     ```
+
+    Você pode passar opções como `bin/sync Fatura20220220.xls --override-memo`.
+    Abaixo as opções suportadas:
+
+    - `--override-memo`: com isso, os memos das transação vão ser sobrescritas,
+    mesmo que já tenha editado elas no YNAB depois de uma importação anterior.
+    Por exemplo, isto é útil caso você queira ajustar um prefixo de memo
+    retroativamente. Lembre-se que todas as edições de memo que você fez nas
+    transações do arquivo XLS serão perdidas e substituídas.
 
 

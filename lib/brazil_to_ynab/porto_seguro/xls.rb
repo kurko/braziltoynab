@@ -1,8 +1,5 @@
 #BrazilToYnab frozen_string_literal: true
 
-require 'brazil_to_ynab/transaction'
-require 'roo-xls'
-
 module BrazilToYnab
   module PortoSeguro
     class Xls
@@ -39,7 +36,7 @@ module BrazilToYnab
           end
 
           if transaction?(row)
-            transactions << BrazilToYnab::Transaction.new(
+            transactions << BrazilToYnab::PortoSeguro::Transaction.new(
               card_number: current_card,
               account_name: current_card_name,
               date: first_installment_date(cell(row, DATE_COL)),

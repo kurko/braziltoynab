@@ -9,5 +9,9 @@ module BrazilToYnab
     def self.card_account_id(card_number)
       "#{CARD_ACCOUNT_PREFIX}_#{card_number}_ACCOUNT_ID"
     end
+
+    def self.memo_prefix(card_number)
+      "#{CARD_ACCOUNT_PREFIX}_#{card_number}_MEMO_PREFIX"
+    end
   end
 end

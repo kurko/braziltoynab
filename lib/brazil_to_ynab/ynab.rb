@@ -4,6 +4,11 @@ require 'ynab'
 
 module BrazilToYnab
   class Ynab
+
+    def initialize(options:)
+      @options = options
+    end
+
     def list_budgets
       budget_response = client.budgets.get_budgets
       budgets = budget_response.data.budgets
@@ -15,20 +20,20 @@ module BrazilToYnab
     end
 
     def sync(xls_file:)
-      @error_messages = {}
+      @errors = []
 
-      payload =
+      transactions =
         BrazilToYnab::PortoSeguro::Xls
         .new(file: xls_file)
         .get_transactions
-        .map { |transaction| payload_for_transaction(transaction) }
+        .map { |transaction| Ynab::Transaction.new(transaction, @errors) }
         .compact
 
-      return if payload.none?
+      return if transactions.none?
 
       response = client
         .transactions
-        .create_transaction(budget_id, transactions: payload)
+        .create_transaction(budget_id, transactions: transactions.map(&:payload))
 
       # For the duplicates, let's update them but,
       #
@@ -38,21 +43,19 @@ module BrazilToYnab
       duplicate_ids = response.data.duplicate_import_ids
 
       if duplicate_ids.any?
-        new_payload =
-          payload
-          .select { |txn| duplicate_ids.include?(txn[:import_id]) }
-          .map { |txn| txn.except(:payee, :memo) }
+        duplicate_transactions =
+          transactions.select { |txn| duplicate_ids.include?(txn.import_id) }
 
-        client
-          .transactions
-          .update_transactions(budget_id, transactions: new_payload)
+        update_duplicates(duplicate_transactions)
       end
 
     rescue ::YNAB::ApiError => e
       puts "YNAB ERROR: id=#{e.id}; name=#{e.name}; detail: #{e.detail}"
     ensure
-      @error_messages.each do |key, value|
-        puts key
+      errors = @errors.compact.uniq
+      puts "@errors: #{errors.count}"
+      errors.each do |error|
+        puts error
       end
     end
 
@@ -62,33 +65,29 @@ module BrazilToYnab
       @client ||= ::YNAB::API.new(ENV['YNAB_ACCESS_TOKEN'])
     end
 
-    def account_for_card(card_number)
-      ENV[EnvVars.card_account_id(card_number)]
-    end
-
     def budget_id
       ENV[EnvVars::BUDGET] ||
         raise("You have not defined #{EnvVars::BUDGET}")
     end
 
-    def payload_for_transaction(transaction)
-      card_number = transaction.card_number
 
-      if account_for_card(card_number).nil?
-        message = "No account configuration for card #{card_number}. Define #{EnvVars.card_account_id(card_number)}"
-        @error_messages[message] = nil
-        return
-      end
+    # We'll reload the transactions from their API so we don't
+    # override 'memo's that were already uploaded. We'll only
+    def update_duplicates(existing_transactions)
+      puts "Overriding all memos" if @options['override-memo']
 
-      transaction_date = transaction.transaction_date.strftime("%Y-%m-%d")
-      {
-        account_id: account_for_card(card_number),
-        amount: BrazilToYnab::Ynab::Milliunit.new(transaction.amount).format,
-        date: transaction_date,
-        payee_name: transaction.payee,
-        memo: transaction.memo,
-        import_id: transaction.id.to_s[0..34],
-      }
+      new_payload =
+        existing_transactions
+        .map { |txn|
+          exceptions = [:payee]
+          exceptions << :memo unless @options['override-memo']
+
+          txn.payload.except(*exceptions)
+        }
+
+      client
+        .transactions
+        .update_transactions(budget_id, transactions: new_payload)
     end
   end
 end
