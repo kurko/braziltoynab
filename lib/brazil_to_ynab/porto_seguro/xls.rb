@@ -15,6 +15,35 @@ module BrazilToYnab
       TOTAL_CELL_VALUE = "TOTAL".freeze
       NATIONAL_SHEET = "nacional"
 
+      class UndefinedRelativeDate < StandardError; end
+
+      # Params
+      #
+      # - file: this is a path to the XLS file we want to import.
+      #
+      # The filename must follow the format `fatura20220202.xls` otherwise we
+      # don't know what the statement date is. The XLS file doesn't include any
+      # information about what year each transaction happens.
+      #
+      # So if today is january first and you see 29/12, it's 3 days ago. But if
+      # you see 01/06, you don't know if it's a future installment or the
+      # initial date of the purchase (first installment 6 months ago).
+      #
+      # The file has this format:
+      #
+      #   |           |                        | Crédito | Débito | Cartão |
+      #   | John Doe                           |         |        | 1234   |
+      #   | 10/01     | 01/03 Shampoo          |         |        |        |
+      #   | 11/01     | Some description       |         |        |        |
+      #   | Mary Doe                           |         |        | 2345   |
+      #   | 12/12     | 02/12 Some description |         |        |        |
+      #   | 13/01     | Some description       |         |        |        |
+      #
+      # The date refers to the moment of the purchase. Above, purchase `12/12`
+      # is when the first installment took place. The description `02/03`  means
+      # it's the 2nd installment now, which is being charged on january 12th.
+      # Throughout the whole 12 installments, the date will never change.
+      #
       def initialize(file:)
         @file = file
         if @file.nil?
@@ -23,6 +52,8 @@ module BrazilToYnab
       end
 
       def get_transactions
+        validate_file_name_has_year_month_date
+
         row = HEADER_ROW + 1
         cel = 1
         transactions = []
@@ -72,13 +103,13 @@ module BrazilToYnab
           )
       end
 
-      # Porto Seguro shows the date the transaction was created.
-      # If you bought in january and now you're on the 5th
-      # installment, this date continues being january, but the
-      # description shows `05/10` (5th installment out of 10).
+      # Porto Seguro shows the date the transaction was created (without the
+      # year).  If you bought in january and now you're on the 5th installment,
+      # this date continues being january, but the description shows `05/10`
+      # (5th installment out of 10).
       def first_installment_date(day_month)
-        file_match = @file.match('([0-9]{4})([0-9]{2})')
-        file_year, file_month = file_match[1], file_match[2]
+        file_year, file_month =
+          filename_date_matching[1], filename_date_matching[2]
 
         transaction_day = day_month.split('/').first
         transaction_month = day_month.split('/').last
@@ -88,6 +119,18 @@ module BrazilToYnab
         end
 
         Date.new(file_year.to_i, transaction_month.to_i, transaction_day.to_i)
+      end
+
+      def validate_file_name_has_year_month_date
+        return if filename_date_matching[1].to_i > Date.today.year - 1
+        return if filename_date_matching[2].to_i.between?(1, 12)
+        return if filename_date_matching[3].to_i.between?(1, 31)
+
+        raise UndefinedRelativeDate, "Filename must follow format 'FaturaYYYYMMDD.xls'"
+      end
+
+      def filename_date_matching
+        @file.match('Fatura([0-9]{4})([0-9]{2})([0-9]{2})')
       end
     end
   end
