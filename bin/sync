@@ -10,6 +10,9 @@ puts "Syncing..."
 options = {
   'override-memo': {
     default: false,
+  },
+  'import-future': {
+    default: false,
   }
 }
 

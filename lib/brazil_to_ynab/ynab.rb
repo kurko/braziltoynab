@@ -23,7 +23,7 @@ module BrazilToYnab
 
       transactions =
         BrazilToYnab::PortoSeguro::Xls
-          .new(filepath: xls_file)
+          .new(filepath: xls_file, options: @options)
           .get_transactions
           .map { |transaction| Ynab::Transaction.new(transaction, @errors) }
           .compact

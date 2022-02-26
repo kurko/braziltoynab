@@ -42,10 +42,6 @@ module BrazilToYnab
         @date.next_month(current_installment - 1)
       end
 
-      def first_installment_date
-        @date
-      end
-
       def amount
         if @credit.to_i != 0
           @credit.to_f.abs.to_s
@@ -76,15 +72,28 @@ module BrazilToYnab
         !installments_match.nil?
       end
 
-      private
+      def first_installment_date
+        @date
+      end
+
+      def total_installments
+        return 1 unless installments?
+        installments_match[2].to_i
+      end
 
       def current_installment
-        return unless installments?
+        return 1 unless installments?
         installments_match[1].to_i
       end
 
+      def future_installments?
+        current_installment < total_installments
+      end
+
+      private
+
       def installments_match
-        @installments_match ||= memo.match(/([0-9]{1,2})\/[0-9]{1,2}/)
+        @installments_match ||= memo.match(/([0-9]{1,2})\/([0-9]{1,2})/)
       end
     end
   end

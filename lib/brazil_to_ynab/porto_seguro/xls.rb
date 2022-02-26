@@ -45,16 +45,14 @@ module BrazilToYnab
       # it's the 2nd installment now, which is being charged on january 12th.
       # Throughout the whole 12 installments, the date will never change.
       #
-      def initialize(filepath:)
+      def initialize(filepath:, options: {})
         @filepath = filepath
-        if @filepath.nil?
-          raise ".xls file path is not defined"
-        end
+        @options = options
+
+        raise ".xls file path is not defined" if @filepath.nil?
       end
 
       def get_transactions
-        validate_file_has_year_month
-
         row = HEADER_ROW + 1
         cel = 1
         transactions = []
@@ -68,13 +66,11 @@ module BrazilToYnab
           end
 
           if transaction?(row)
-            transactions << BrazilToYnab::PortoSeguro::Transaction.new(
-              card_number: current_card,
-              account_name: current_card_name,
-              date: first_installment_date(cell(row, DATE_COL)),
-              payee: cell(row, DESCRIPTION_COL),
-              credit: cell(row, CREDIT_COL),
-              debit: cell(row, DEBIT_COL)
+            transactions = extract_transactions_from_xls_line(
+              card: current_card,
+              card_name: current_card_name,
+              transactions: transactions,
+              row: row
             )
           end
 
@@ -85,6 +81,10 @@ module BrazilToYnab
       end
 
       private
+
+      def import_future?
+        @options["import-future"]
+      end
 
       def xls
         @xls ||= ::Roo::Excel.new(@filepath)
@@ -104,13 +104,63 @@ module BrazilToYnab
           )
       end
 
+      def extract_transactions_from_xls_line(card:, card_name:, transactions:, row:)
+        # Imports the current transaction from the statement
+        properties = {
+          card_number: card,
+          account_name: card_name,
+          date: first_installment_date(cell(row, DATE_COL)),
+          payee: cell(row, DESCRIPTION_COL),
+          credit: cell(row, CREDIT_COL),
+          debit: cell(row, DEBIT_COL)
+        }
+        xls_entry = BrazilToYnab::PortoSeguro::Transaction.new(**properties)
+        transactions << xls_entry
+
+        # The transaction has the installment number. Here we figure out
+        # what are the future transactions based on the current one, and
+        # include those in the list as well. That means future transactions
+        # will be included in YNAB.
+        #
+        # It loops through the future transactions, generating the string
+        # that Porto Seguro has, such as 01/12, 02/12, 03/12.
+        if import_future? && xls_entry.future_installments?
+          installment = xls_entry.current_installment
+
+          while installment < xls_entry.total_installments
+            installment += 1
+
+            new_installment_string = [
+              installment.to_s.rjust(2, "0"),
+              xls_entry.total_installments.to_s.rjust(2, "0")
+            ].join("/")
+
+            # Replaces current installment (e.g 02/12) with the future one
+            # (e.g 03/12)
+            properties[:payee] = properties[:payee].gsub(
+              xls_entry.installments_string,
+              new_installment_string
+            )
+
+            future_entry = BrazilToYnab::PortoSeguro::Transaction.new(**properties)
+            transactions << future_entry
+          end
+        end
+
+        transactions
+      end
+
       # Porto Seguro shows the date the transaction was created (without the
-      # year).  If you bought in january and now you're on the 5th installment,
+      # year). If you bought in january and now you're on the 5th installment,
       # this date continues being january, but the description shows `05/10`
       # (5th installment out of 10).
       def first_installment_date(day_month)
         file_year, file_month =
           file_or_statement_date.year, file_or_statement_date.month
+
+        unless file_year && file_month
+          raise UndefinedRelativeDate, "No date found for #{@filepath}"
+        end
 
         transaction_day = day_month.split("/").first
         transaction_month = day_month.split("/").last
@@ -120,12 +170,6 @@ module BrazilToYnab
         end
 
         Date.new(file_year.to_i, transaction_month.to_i, transaction_day.to_i)
-      end
-
-      def validate_file_has_year_month
-        return if file_or_statement_date
-
-        raise UndefinedRelativeDate, "No date found for #{@filepath}"
       end
 
       def file_or_statement_date

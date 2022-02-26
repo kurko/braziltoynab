@@ -13,7 +13,7 @@ Este é um conjunto de scripts para ler dados de transações e importar no YNAB
 1. Você precisa de Ruby na sua máquina local (Unix/MacOS).
 1. Download: faça um `git clone` do repositório.
 1. Configuração do YNAB: você precisa configurar o `API_TOKEN` do YNAB na sua
-   máquina. Define a seguinte variável de ambiente:
+   máquina. Defina a seguinte variável de ambiente:
 
    ```
    YNAB_ACCESS_TOKEN="escreva-aqui-o-seu-token-do-ynab"
@@ -48,11 +48,11 @@ Este é um conjunto de scripts para ler dados de transações e importar no YNAB
    quer que todas as transações desse cartão tenham um determinado prefixo no
    campo Memo no YNAB.
 
-   Eu acho útil colocar os cartões todos na mesma conta do YNAB, e diferenciar
-   eles por um prefixo no campo memo. Assim um único pagamento de fatura (uma transação)
-   cobre os cartão adicionais. Se você colocar todos na mesma conta, vai precisa
-   diferenciá-los de alguma forma. Se você prefere colocar cada cartão em uma
-   conta separada, talvez não precise dessa configuração.
+     Eu acho útil colocar os cartões todos na mesma conta do YNAB, e diferenciar
+     eles por um prefixo no campo memo. Assim um único pagamento de fatura (uma transação)
+     cobre os cartão adicionais. Se você colocar todos na mesma conta, vai precisa
+     diferenciá-los de alguma forma. Se você prefere colocar cada cartão em uma
+     conta separada, talvez não precise dessa configuração.
 
 1. Executando: para sincronizar o XLS com YNAB, rode `bin/sync $NOME_DO_ARQUIVO`.
 
@@ -72,4 +72,7 @@ Este é um conjunto de scripts para ler dados de transações e importar no YNAB
     retroativamente. Lembre-se que todas as edições de memo que você fez nas
     transações do arquivo XLS serão perdidas e substituídas.
 
-
+    - `--import-future`: isto vai importar transações futuras. Para compras
+    parcelas, o XLS possui um valor indicando a parcela atual (ex.: `02/12` para
+    2a parcela de 12). Esta opção vai gerar transações futuras (ex.: `03/12`,
+    `04/12`...), todas com datas futuras.
