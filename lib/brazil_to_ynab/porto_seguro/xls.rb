@@ -19,7 +19,7 @@ module BrazilToYnab
 
       # Params
       #
-      # - file: this is a path to the XLS file we want to import.
+      # - filepath: this is a path to the XLS file we want to import.
       #
       # The filename must follow the format `fatura20220202.xls` otherwise we
       # don't know what the statement date is. The XLS file doesn't include any
@@ -44,15 +44,15 @@ module BrazilToYnab
       # it's the 2nd installment now, which is being charged on january 12th.
       # Throughout the whole 12 installments, the date will never change.
       #
-      def initialize(file:)
-        @file = file
-        if @file.nil?
+      def initialize(filepath:)
+        @filepath = filepath
+        if @filepath.nil?
           raise ".xls file path is not defined"
         end
       end
 
       def get_transactions
-        validate_file_name_has_year_month_date
+        validate_file_has_year_month
 
         row = HEADER_ROW + 1
         cel = 1
@@ -86,7 +86,7 @@ module BrazilToYnab
       private
 
       def xls
-        @xls ||= ::Roo::Excel.new(@file)
+        @xls ||= ::Roo::Excel.new(@filepath)
       end
 
       def cell(row, col, sheet = NATIONAL_SHEET)
@@ -109,7 +109,7 @@ module BrazilToYnab
       # (5th installment out of 10).
       def first_installment_date(day_month)
         file_year, file_month =
-          filename_date_matching[1], filename_date_matching[2]
+          file_or_statement_date.year, file_or_statement_date.month
 
         transaction_day = day_month.split('/').first
         transaction_month = day_month.split('/').last
@@ -121,16 +121,24 @@ module BrazilToYnab
         Date.new(file_year.to_i, transaction_month.to_i, transaction_day.to_i)
       end
 
-      def validate_file_name_has_year_month_date
-        return if filename_date_matching[1].to_i > Date.today.year - 1
-        return if filename_date_matching[2].to_i.between?(1, 12)
-        return if filename_date_matching[3].to_i.between?(1, 31)
+      def validate_file_has_year_month
+        return if file_or_statement_date
 
-        raise UndefinedRelativeDate, "Filename must follow format 'FaturaYYYYMMDD.xls'"
+        raise UndefinedRelativeDate, "No date found for #{@filepath}"
       end
 
-      def filename_date_matching
-        @file.match('Fatura([0-9]{4})([0-9]{2})([0-9]{2})')
+      def file_or_statement_date
+        filename_date_match = @filepath.match('Fatura([0-9]{4})([0-9]{2})([0-9]{2})')
+        if filename_date_match[1].to_i > Date.today.year - 10 &&
+          filename_date_match[2].to_i.between?(1, 12)
+          Time.new(
+            filename_date_match[1],
+            filename_date_match[2],
+            10 # We don't care about the file day nor time.
+          )
+        else
+          File.new(@filepath).mtime
+        end
       end
     end
   end

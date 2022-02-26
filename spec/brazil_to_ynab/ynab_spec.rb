@@ -2,7 +2,7 @@
 
 RSpec.describe BrazilToYnab::Ynab do
   subject do
-    described_class.new
+    described_class.new(options: {})
   end
 
   it "loads transactions from XLS file" do
