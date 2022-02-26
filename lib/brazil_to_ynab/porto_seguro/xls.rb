@@ -23,7 +23,8 @@ module BrazilToYnab
       #
       # The filename must follow the format `fatura20220202.xls` otherwise we
       # don't know what the statement date is. The XLS file doesn't include any
-      # information about what year each transaction happens.
+      # information about what year each transaction happens. If there's no
+      # date in the name, we fallback to File#mtime.
       #
       # So if today is january first and you see 29/12, it's 3 days ago. But if
       # you see 01/06, you don't know if it's a future installment or the
