@@ -1,4 +1,4 @@
-#BrazilToYnab frozen_string_literal: true
+# BrazilToYnab frozen_string_literal: true
 
 module BrazilToYnab
   module PortoSeguro
@@ -60,7 +60,7 @@ module BrazilToYnab
         current_card = nil
         current_card_name = nil
 
-        while !xls.cell(row, cel).nil?
+        until xls.cell(row, cel).nil?
           if cell(row, CARD_NUMBER_COL)
             current_card = cell(row, CARD_NUMBER_COL)
             current_card_name = cell(row, CARD_NAME_COL)
@@ -73,7 +73,7 @@ module BrazilToYnab
               date: first_installment_date(cell(row, DATE_COL)),
               payee: cell(row, DESCRIPTION_COL),
               credit: cell(row, CREDIT_COL),
-              debit: cell(row, DEBIT_COL),
+              debit: cell(row, DEBIT_COL)
             )
           end
 
@@ -111,8 +111,8 @@ module BrazilToYnab
         file_year, file_month =
           file_or_statement_date.year, file_or_statement_date.month
 
-        transaction_day = day_month.split('/').first
-        transaction_month = day_month.split('/').last
+        transaction_day = day_month.split("/").first
+        transaction_month = day_month.split("/").last
 
         if transaction_month.to_i > file_month.to_i
           file_year = (file_year.to_i - 1).to_s
@@ -128,9 +128,9 @@ module BrazilToYnab
       end
 
       def file_or_statement_date
-        filename_date_match = @filepath.match('Fatura([0-9]{4})([0-9]{2})([0-9]{2})')
+        filename_date_match = @filepath.match("Fatura([0-9]{4})([0-9]{2})([0-9]{2})")
         if filename_date_match[1].to_i > Date.today.year - 10 &&
-          filename_date_match[2].to_i.between?(1, 12)
+            filename_date_match[2].to_i.between?(1, 12)
           Time.new(
             filename_date_match[1],
             filename_date_match[2],

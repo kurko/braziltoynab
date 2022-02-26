@@ -32,12 +32,12 @@ module BrazilToYnab
           date: transaction_date,
           payee_name: @transaction.payee,
           memo: memo,
-          import_id: import_id,
+          import_id: import_id
         }
       end
 
       def import_id
-        id = "#{VERSION}#{@transaction.id.to_s}"
+        id = "#{VERSION}#{@transaction.id}"
         id[0..35]
       end
 

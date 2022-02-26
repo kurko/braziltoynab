@@ -3,7 +3,7 @@
 require "brazil_to_ynab"
 
 Dir.glob("spec/contracts/**/*.rb").each do |filepath|
-  require filepath.gsub(/\Aspec\//, '')
+  require filepath.gsub(/\Aspec\//, "")
 end
 
 RSpec.configure do |config|

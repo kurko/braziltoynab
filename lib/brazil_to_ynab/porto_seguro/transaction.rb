@@ -18,22 +18,22 @@ module BrazilToYnab
 
       def id
         installment_id = if installments?
-                           installments_string
-                         else
-                           "01/01"
-                         end
+          installments_string
+        else
+          "01/01"
+        end
 
         [
-          @card_number.tr('-', ''),
+          @card_number.tr("-", ""),
           # Always keep the original date, otherwise we might
           # risk hitting duplicates as we make the same purchases
           # again in the future (same day on the month, same number
           # of installments)
-          first_installment_date.to_s.tr('-', ''),
+          first_installment_date.to_s.tr("-", ""),
           amount,
           installment_id,
-          memo.tr('-', ''),
-        ].compact.join.tr('^A-Za-z0-9-', '')
+          memo.tr("-", "")
+        ].compact.join.tr("^A-Za-z0-9-", "")
       end
 
       def transaction_date
@@ -58,8 +58,8 @@ module BrazilToYnab
 
       def payee
         @payee
-          .gsub(/[0-9]{1,2}\/[0-9]{1,2}/, '')
-          .gsub(/\s\s/, ' ')
+          .gsub(/[0-9]{1,2}\/[0-9]{1,2}/, "")
+          .gsub(/\s\s/, " ")
           .strip
       end
 

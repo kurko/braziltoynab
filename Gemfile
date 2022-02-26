@@ -7,5 +7,5 @@ gem "rspec", "~> 3.0"
 gem "standard", "~> 1.3"
 gem "pry"
 gem "roo", "~> 2.8.0"
-gem 'roo-xls'
-gem 'ynab'
+gem "roo-xls"
+gem "ynab"

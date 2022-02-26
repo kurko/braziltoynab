@@ -1,17 +1,16 @@
 # frozen_string_literal: true
 
-require 'ynab'
+require "ynab"
 
 module BrazilToYnab
   class Ynab
-
     def initialize(options:)
       @options = options
     end
 
     def list_budgets
       budget_response = client.budgets.get_budgets
-      budgets = budget_response.data.budgets
+      budget_response.data.budgets
     end
 
     def list_accounts(budget_id)
@@ -24,10 +23,10 @@ module BrazilToYnab
 
       transactions =
         BrazilToYnab::PortoSeguro::Xls
-        .new(filepath: xls_file)
-        .get_transactions
-        .map { |transaction| Ynab::Transaction.new(transaction, @errors) }
-        .compact
+          .new(filepath: xls_file)
+          .get_transactions
+          .map { |transaction| Ynab::Transaction.new(transaction, @errors) }
+          .compact
 
       return if transactions.none?
 
@@ -48,7 +47,6 @@ module BrazilToYnab
 
         update_duplicates(duplicate_transactions)
       end
-
     rescue ::YNAB::ApiError => e
       puts "YNAB ERROR: id=#{e.id}; name=#{e.name}; detail: #{e.detail}"
     ensure
@@ -62,7 +60,7 @@ module BrazilToYnab
     private
 
     def client
-      @client ||= ::YNAB::API.new(ENV['YNAB_ACCESS_TOKEN'])
+      @client ||= ::YNAB::API.new(ENV["YNAB_ACCESS_TOKEN"])
     end
 
     def budget_id
@@ -70,17 +68,16 @@ module BrazilToYnab
         raise("You have not defined #{EnvVars::BUDGET}")
     end
 
-
     # We'll reload the transactions from their API so we don't
     # override 'memo's that were already uploaded. We'll only
     def update_duplicates(existing_transactions)
-      puts "Overriding all memos" if @options['override-memo']
+      puts "Overriding all memos" if @options["override-memo"]
 
       new_payload =
         existing_transactions
-        .map { |txn|
+          .map { |txn|
           exceptions = [:payee]
-          exceptions << :memo unless @options['override-memo']
+          exceptions << :memo unless @options["override-memo"]
 
           txn.payload.except(*exceptions)
         }
