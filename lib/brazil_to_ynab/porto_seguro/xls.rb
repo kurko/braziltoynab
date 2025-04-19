@@ -53,28 +53,28 @@ module BrazilToYnab
       end
 
       def get_transactions
-        row = HEADER_ROW + 1
+        row_number = HEADER_ROW + 1
         cel = 1
         transactions = []
         current_card = nil
         current_card_name = nil
 
-        until xls.cell(row, cel).nil?
-          if cell(row, CARD_NUMBER_COL)
-            current_card = cell(row, CARD_NUMBER_COL)
-            current_card_name = cell(row, CARD_NAME_COL)
+        until xls.cell(row_number, cel).nil?
+          if cell(row_number, CARD_NUMBER_COL)
+            current_card = cell(row_number, CARD_NUMBER_COL)
+            current_card_name = cell(row_number, CARD_NAME_COL)
           end
 
-          if transaction?(row)
+          if transaction?(row_number)
             transactions = extract_transactions_from_xls_line(
               card: current_card,
               card_name: current_card_name,
               transactions: transactions,
-              row: row
+              row_number: row_number
             )
           end
 
-          row += 1
+          row_number += 1
         end
 
         transactions
@@ -90,31 +90,54 @@ module BrazilToYnab
         @xls ||= ::Roo::Excel.new(@filepath)
       end
 
-      def cell(row, col, sheet = NATIONAL_SHEET)
-        xls.cell(row, col, NATIONAL_SHEET)
+      def cell(row_number, col, sheet = NATIONAL_SHEET)
+        xls.cell(row_number, col, NATIONAL_SHEET)
       end
 
-      def transaction?(row)
-        row != HEADER_ROW &&
-          xls.cell(row, 1) != TOTAL_CELL_VALUE &&
-          !xls.cell(row, DESCRIPTION_COL).nil? &&
+      def transaction?(row_number)
+        row_number != HEADER_ROW &&
+          xls.cell(row_number, 1) != TOTAL_CELL_VALUE &&
+          !xls.cell(row_number, DESCRIPTION_COL).nil? &&
           (
-            xls.cell(row, CREDIT_COL) ||
-            xls.cell(row, DEBIT_COL)
+            xls.cell(row_number, CREDIT_COL) ||
+            xls.cell(row_number, DEBIT_COL)
           )
       end
 
-      def extract_transactions_from_xls_line(card:, card_name:, transactions:, row:)
+      def extract_transactions_from_xls_line(card:, card_name:, transactions:, row_number:)
         # Imports the current transaction from the statement
+        credit = cell(row_number, CREDIT_COL)
+        debit = cell(row_number, DEBIT_COL)
+
         properties = {
           card_number: card,
           account_name: card_name,
-          date: first_installment_date(cell(row, DATE_COL)),
-          payee: cell(row, DESCRIPTION_COL),
-          credit: cell(row, CREDIT_COL),
-          debit: cell(row, DEBIT_COL)
+          date: first_installment_date(cell(row_number, DATE_COL)),
+          payee: cell(row_number, DESCRIPTION_COL),
+          credit: credit,
+          debit: debit
         }
-        xls_entry = BrazilToYnab::PortoSeguro::Transaction.new(**properties)
+
+        begin
+          xls_entry = BrazilToYnab::PortoSeguro::Transaction.new(**properties)
+          xls_entry.amount
+        rescue BrazilToYnab::PortoSeguro::Transaction::Error => e
+          puts "For debugging:"
+          puts "Properties extracted from the XLS:"
+          puts properties.inspect
+
+          puts "Raw values from the XLS:"
+          puts [
+            cell(row_number, 1),
+            cell(row_number, 2),
+            cell(row_number, 3),
+            cell(row_number, 4),
+            cell(row_number, 5),
+          ].inspect
+
+          raise e
+        end
+
         transactions << xls_entry
 
         # The transaction has the installment number. Here we figure out

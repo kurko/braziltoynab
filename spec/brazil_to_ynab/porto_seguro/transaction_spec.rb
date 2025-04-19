@@ -6,7 +6,7 @@ RSpec.describe BrazilToYnab::PortoSeguro::Transaction do
   subject do
     described_class.new(
       card_number: "1234",
-      credit: 10,
+      credit: credit,
       debit: 0,
       payee: payee,
       date: Date.new(2021, 10, 10),
@@ -14,7 +14,16 @@ RSpec.describe BrazilToYnab::PortoSeguro::Transaction do
     )
   end
 
+  let(:credit) { 10 }
+  let(:payee) { "Payee" }
+
   it_behaves_like "transaction"
+
+  describe "different amounts" do
+    let(:credit) { 0.25 }
+
+    it { expect(subject.amount).to eq "0.25" }
+  end
 
   describe "installments" do
     context "when no installments defined" do

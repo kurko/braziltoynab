@@ -30,6 +30,7 @@ module BrazilToYnab
 
       return if transactions.none?
 
+      transactions = transactions.select { |txn| txn.in_the_past? }
       response = client
         .transactions
         .create_transaction(budget_id, transactions: transactions.map(&:payload))
@@ -48,6 +49,9 @@ module BrazilToYnab
         update_duplicates(duplicate_transactions)
       end
     rescue ::YNAB::ApiError => e
+      transactions.each_with_index do |txn, index|
+        puts "Transaction #{index}: #{txn.payload.inspect}"
+      end
       puts "YNAB ERROR: id=#{e.id}; name=#{e.name}; detail: #{e.detail}"
     ensure
       errors = @errors.compact.uniq

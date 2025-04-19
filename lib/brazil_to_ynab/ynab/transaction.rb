@@ -18,6 +18,10 @@ module BrazilToYnab
         @errors = errors
       end
 
+      def in_the_past?
+        @transaction.transaction_date <= Date.today
+      end
+
       def payload
         card_number = @transaction.card_number
 

@@ -43,12 +43,19 @@ module BrazilToYnab
       end
 
       def amount
-        if @credit.to_i != 0
-          @credit.to_f.abs.to_s
-        elsif @debit.to_i != 0
+        # Porto Seguro will return random `-` symbols for credit and debit, so
+        # we need to convert to abs to check if the value is present, and also
+        # remove any symbols for credit (we distinguish credit and debit to
+        # be intentional about sign).
+        if @credit.to_f.abs > 0
+          @credit.to_f.abs.to_s.delete("-")
+        elsif @debit.to_f.abs > 0
           "-#{@debit}"
         else
-          raise Error, "No credit nor debit found"
+          raise(
+            Error,
+            "No credit nor debit found for transaction: #{@payee} on #{@date}"
+          )
         end
       end
 
