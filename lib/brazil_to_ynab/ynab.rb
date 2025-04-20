@@ -30,7 +30,11 @@ module BrazilToYnab
 
       return if transactions.none?
 
-      transactions = transactions.select { |txn| txn.in_the_past? }
+      transactions =
+        transactions
+        .select { |txn| txn.in_the_past? }
+      puts "Transactions for posting: #{transactions.count}"
+
       response = client
         .transactions
         .create_transaction(budget_id, transactions: transactions.map(&:payload))
@@ -46,7 +50,11 @@ module BrazilToYnab
         duplicate_transactions =
           transactions.select { |txn| duplicate_ids.include?(txn.import_id) }
 
+        puts "Duplicate transactions: #{duplicate_transactions.count}"
+
         update_duplicates(duplicate_transactions)
+      else
+        puts "No duplicate transactions"
       end
     rescue ::YNAB::ApiError => e
       transactions.each_with_index do |txn, index|

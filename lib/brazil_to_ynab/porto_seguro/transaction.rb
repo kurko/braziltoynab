@@ -16,6 +16,7 @@ module BrazilToYnab
         @card_number = card_number&.strip
       end
 
+      # This is later used as idempotency key for YNAB (import_id)
       def id
         installment_id = if installments?
           installments_string
@@ -23,7 +24,7 @@ module BrazilToYnab
           "01/01"
         end
 
-        [
+        values = [
           @card_number.tr("-", ""),
           # Always keep the original date, otherwise we might
           # risk hitting duplicates as we make the same purchases
@@ -32,8 +33,29 @@ module BrazilToYnab
           first_installment_date.to_s.tr("-", ""),
           amount,
           installment_id,
-          memo.tr("-", "")
-        ].compact.join.tr("^A-Za-z0-9-", "")
+
+          # The memo can change between statements, so we only keep the first
+          # 4 characters of the memo. On analysis, it looks like it never
+          # changes the first few characters, so this is a good compromise.
+          #
+          # For example, 'APPLE.COM/BILL' and then later the same purchase
+          # is described as 'APPLE.COM/BILLSAOPAULO'. In this example, the
+          # memo was made _more detailed_, but the memo can also change completely,
+          # like 'UBER*PENDING' and then later 'UBER*SAOPAULO' for the
+          # purchase.
+          #
+          # Example:
+          #
+          # 'APPLE.COM/BILL' -> 'APPL'
+          # 'UBER*PENDING'   -> 'UBER'
+          # 'ASA*DIFFER'     -> 'ASA*'
+          #
+          # We also remove any non-alphanumeric characters, to avoid
+          # having special characters in the id.
+          memo.tr("-", "")[0..3]
+        ].compact.join
+
+        values.tr("^A-Za-z0-9-", "")
       end
 
       def transaction_date
@@ -99,6 +121,7 @@ module BrazilToYnab
 
       private
 
+      # The memo is something like "Some Shop Name 02/04" (2nd payment out of 4)
       def installments_match
         @installments_match ||= memo.match(/([0-9]{1,2})\/([0-9]{1,2})/)
       end
