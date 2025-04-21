@@ -57,9 +57,24 @@ module BrazilToYnab
         puts "No duplicate transactions"
       end
     rescue ::YNAB::ApiError => e
+      # The API returns an error that looks like this:
+      #
+      # e.id=400
+      # e.name=bad_request
+      # e.detail="transaction does not exist in this budget (index: 0), " +
+      #          "transaction does not exist in this budget (index: 1), " +
+      #          "transaction does not exist in this budget (index: 2)"
+      #
+      # We extract those indexes, and output only those transactions.
+
+      errored_indexes = e.detail.scan(/\(index: (\d+)\)/).flatten.map(&:to_i)
+
       transactions.each_with_index do |txn, index|
-        puts "Transaction #{index}: #{txn.payload.inspect}"
+        if errored_indexes.include?(index)
+          puts "Transaction #{index}: #{txn.payload.inspect}" 
+        end
       end
+
       puts "YNAB ERROR: id=#{e.id}; name=#{e.name}; detail: #{e.detail}"
     ensure
       errors = @errors.compact.uniq
